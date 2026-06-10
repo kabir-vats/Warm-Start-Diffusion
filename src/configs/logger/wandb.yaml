@@ -1,0 +1,28 @@
+# https://wandb.ai
+
+wandb:
+#  _target_: pytorch_lightning.loggers.wandb.WandbLogger
+  _target_: src.utilities.wandb_callbacks.MyWandbLogger
+  entity: null  # optionally set to name of your wandb team or entity
+  name: null   # will be automatically set to the name of the run (plus timestamp, etc.)
+  tags: []
+  notes: "..."
+  project: "DYffusion"
+  group: ""
+  resume: "allow"
+  reinit: True
+  mode: online              # disabled  # disabled for no wandb logging
+  save_dir: ${work_dir}/
+  offline: False           # set True to store all logs only locally
+  id: null                 # pass correct id to resume experiment!
+  resume_run_id: null      # Use this to resume a specific run using a NEW run ID
+  log_model: False         # True or 'all'
+  prefix: ""
+  save_to_wandb: False
+  save_to_s3_bucket: False
+  save_last_ckpt: False
+  save_best_ckpt: False
+  s3_endpoint_url: "https://rosedata.ucsd.edu"
+  s3_bucket_name: "salva-data-and-results"
+  log_code: True   # Whether to log the code (all .py files in src/*) to wandb
+#  job_type: "train"

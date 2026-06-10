@@ -1,0 +1,29 @@
+# @package _global_
+
+defaults:
+  - /optimizer@module.optimizer: adamw.yaml
+  - /scheduler@module.scheduler: null # no scheduler
+  - _self_
+
+module:
+  # which logged value/metric to monitor (used for checkpointing/early stopping/LR scheduling)
+  monitor: null     # null means that the metric to use is inferred from the experiment_types ``default_monitor_metric``
+  mode: "min"       # "min" means lower metric value is better, can also be "max"
+  use_ema: False    # whether to use exponential moving average of model weights for evaluation
+  ema_decay: 0.9999               # decay rate for exponential moving average (only used if ``use_ema=True``)
+  enable_inference_dropout: null  # null or bool
+  conv_padding_mode_global: null  # null or "zeros" or "circular" etc.
+  learned_channel_variance_loss: False  # whether to use learned channel variance loss
+  reset_optimizer: False          # whether to reset optimizer state when resuming from checkpoint.
+                                  #   This is necessary when resuming with a different learning rate.
+  residual_pred: False            # whether to predict residuals instead of absolute values
+  torch_compile: null             # compile the model using torch.compile for faster execution (requires >=2.0). If None, don't compile. If "model", compile only the model. If "module", compile LightningModule (and model).
+  num_predictions: 20             # number of predictions/samples/ensemble members to make for each batch element
+  num_predictions_in_memory: null # number of predictions to keep in memory for each batch element (if None, use num_predictions)
+  prediction_inputs_noise: 0.0    # perturbation noise to add to the inputs before predicting
+  allow_validation_size_indivisible_on_ddp: False
+  logging_infix: ""               # infix to add to the metric keys when logging to wandb
+  verbose: ${verbose}
+  seed: ${seed}
+  work_dir: ${work_dir}   # Don't change this unless you know what you're doing
+#################################################################################################

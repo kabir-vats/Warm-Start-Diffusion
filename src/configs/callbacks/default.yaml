@@ -1,0 +1,45 @@
+# ----------- A set of helpful default callbacks -------------
+# NOTE: `monitor` and `mode` are defined in configs/module/*.yaml
+
+
+# The following will save the k best model weights to <ckpt_dir>/<filename_k>.pt
+# 'best' is defined by the value of the `monitor` metric (usually some validation metric).
+model_checkpoint:
+  _target_: pytorch_lightning.callbacks.ModelCheckpoint
+  monitor: ${module.monitor}   # name of the logged metric which determines when model is improving
+  mode: ${module.mode}         # "max" means higher metric value is better, can be also "min"
+  save_top_k: 1               # save k best models (determined by above metric)
+  save_last: True             # additionally always save model from last epoch
+  verbose: ${verbose}
+  dirpath: ${ckpt_dir}
+  filename: "${name}_${name_suffix}_epoch{epoch:03d}_seed${seed}"
+  auto_insert_metric_name: False
+
+model_checkpoint_every_n_steps:
+  _target_: pytorch_lightning.callbacks.ModelCheckpoint
+  save_top_k: -1               # save all best models
+  save_last: False
+  verbose: True
+  dirpath: ${ckpt_dir}
+  filename: "${name}_${name_suffix}_seed${seed}_epoch{epoch:03d}_step{step}"
+  auto_insert_metric_name: False
+  every_n_train_steps: 1000000  # save every n training steps
+  # every_n_epochs: 10
+
+# Early stopping based on the `monitor` metric (usually validation MSE).
+early_stopping: null
+#  _target_: pytorch_lightning.callbacks.EarlyStopping
+#  monitor: ${module.monitor}  # name of the logged metric which determines when model is improving
+#  mode: ${module.mode}        # "min" means higher metric value is better, can be also "max"
+#  patience: 25               # how many validation epochs of not improving until training stops
+#  min_delta: 0               # minimum change in the monitored metric needed to qualify as an improvement
+#  verbose: True
+
+# Timing callback to log dataloader, backward, and optimizer step times
+timing_callback:
+  _target_: src.utilities.timing.TimingCallback
+  log_every_n_steps: 50
+
+progress_bar:
+    _target_: pytorch_lightning.callbacks.TQDMProgressBar
+    refresh_rate: 1

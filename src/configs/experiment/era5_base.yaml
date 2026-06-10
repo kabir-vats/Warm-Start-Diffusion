@@ -1,0 +1,74 @@
+# @package _global_
+defaults:
+  - override /datamodule: era5_mini.yaml
+  - override /model: adm.yaml
+  - override /optimizer@module.optimizer: adamw.yaml
+  - override /scheduler@module.scheduler: linear_warmup_cosine.yaml
+
+
+name: "ERA5"
+model:
+  loss_function: "wmse"
+
+module:
+  use_ema: True
+  ema_decay: 0.9999
+  num_predictions: 5
+  num_predictions_in_memory: 5
+  enable_inference_dropout: False
+  learned_channel_variance_loss: True
+  optimizer:
+    lr: 1e-4
+    weight_decay: 0.01
+    muon:
+      lr: 5e-4
+
+trainer:
+  max_epochs: 200
+  gradient_clip_val: 1.0
+  deterministic: True
+  precision: 16
+
+datamodule:
+  possible_initial_times_eval: [ "00", "12" ]
+  batch_size: 32
+  eval_batch_size: 1
+  horizon: 1
+  window: 1
+  num_workers: 16
+  prefetch_factor: 3 # 8
+  use_dask: False
+  max_val_samples: 36
+
+callbacks:
+  model_checkpoint_t2m:
+    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+    monitor: "val/t6/crps/2m_temperature"   # name of the logged metric which determines when model is improving
+    mode: "min"         # "max" means higher metric value is better, can be also "min"
+    save_top_k: 1               # save k best models (determined by above metric)
+    save_last: False             # additionally always save model from last epoch
+    verbose: ${verbose}
+    dirpath: ${ckpt_dir}
+    filename: "${name}_${name_suffix}_epoch{epoch:03d}_seed${seed}_t2m"
+    auto_insert_metric_name: False
+
+  model_checkpoint:
+    save_top_k: 2
+
+#  model_checkpoint_z500:
+#    _target_: pytorch_lightning.callbacks.ModelCheckpoint
+#    monitor: "val/t12/rmse/geopotential_500"   # name of the logged metric which determines when model is improving
+##    monitor: "val/t12/crps/10m_u_component_of_wind"   # name of the logged metric which determines when model is improving
+#    mode: "min"         # "max" means higher metric value is better, can be also "min"
+#    save_top_k: 1               # save k best models (determined by above metric)
+#    save_last: False             # additionally always save model from last epoch
+#    verbose: ${verbose}
+#    dirpath: ${ckpt_dir}
+#    filename: "${name}_${name_suffix}_epoch{epoch:03d}_seed${seed}_u10m"
+#    auto_insert_metric_name: False
+
+
+logger:
+  wandb:
+    project: "Wx"
+    tags: ["era5"]

@@ -1,0 +1,18 @@
+defaults:
+  - _self_
+  - _base.yaml
+
+_target_: src.diffusion.edm.EDMPrecond
+use_fp16: False           # Execute the underlying model at FP16 precision?
+sigma_min: 0.002              # Minimum supported noise level.
+sigma_max: null           # Maximum supported noise level.
+sigma_max_inf: 80           # Maximum supported noise level.
+P_mean: -1.2              # Mean of the noise level distribution.
+P_std: 1.2                # Standard deviation of the noise level distribution.
+# Sampling parameters.  
+num_steps: 18             # Number of steps in the sampling loop.
+rho: 7                    # Exponent of the time step discretization.
+S_churn: 0                # Maximum noise increase per step.
+S_min: 0                  # Minimum noise level for increased noise.
+# S_max: null             # Maximum noise level for increased noise.
+S_noise: 1                # Noise level for increased noise.

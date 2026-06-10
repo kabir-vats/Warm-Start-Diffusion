@@ -1,0 +1,78 @@
+\documentclass{article}
+
+\usepackage[preprint]{neurips_2026}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{booktabs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{nicefrac}
+\usepackage{microtype}
+\usepackage{xcolor}
+
+\title{ Warm-Start Diffusion for Low-Resolution Probabilistic ERA5 Weather Forecasting}
+
+\author{%
+  Kabir Vats (Team 43)
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Project Proposal: Track 1}
+
+\subsection{Problem Background \& Motivation}
+
+In this project, I will work on probabilistic forecasting on a low-resolution ERA5 dataset, using a $5^\circ$ global grid. The goal is to predict future weather states at short-to-medium lead times from recent atmospheric states. The low resolution is useful because it lets us test ideas quickly while still keeping the important structure of the problem: global spatial coupling, autoregressive rollout, uncertainty growth, and the need for physically reasonable samples.
+
+Recent machine learning weather models have made this setting much more interesting. GraphCast showed that learned neural weather models can produce strong medium-range forecasts directly from reanalysis data \citep{lam2023graphcast}. On the probabilistic side, the strongest recent systems are often trained directly with CRPS-style objectives. FGN trains marginal probabilistic forecasts with CRPS and still recovers useful joint structure \citep{alet2025fgn}. AIFS-CRPS takes a similar proper-scoring-rule direction and shows very strong ensemble skill \citep{lang2026aifscrps}. More recently, U-Cast showed that a surprisingly simple U-Net backbone, trained first with MAE and then fine-tuned with CRPS using Monte Carlo Dropout, can be a very strong probabilistic weather forecaster \citep{cachay2026ucast}.
+
+The issue is that optimizing forecast skill directly is not exactly the same thing as sampling physically clean weather trajectories. A model can score well in CRPS while still producing fields with odd spatial texture, poor balance, or unstable rollout behavior. Diffusion models attack the problem from the other direction: instead of predicting a distribution through a direct scoring rule, they learn to generate samples by iterative denoising. GenCast and cBottle are examples of this generative direction for weather and climate data \citep{price2025gencast,brenowitz2025cbottle}. These models tend to be good at sample quality and joint structure, but they are expensive because diffusion needs multiple denoising evaluations per forecast step \citep{ho2020ddpm,salimans2022progressive}.
+
+The core idea of this project is to combine the two sides. I will use the U-Cast methodology as the probabilistic backbone to get an initial forecast, then run a diffusion refiner starting from that forecast. In other words: do not ask diffusion to generate the weather state from pure noise. Start it near a plausible forecast, add controlled noise, and let diffusion clean it up. This follows the basic idea of warm-start diffusion \citep{scholz2025warmstarts}, but applies it to low-resolution probabilistic weather forecasting.
+
+\subsection{Related Work}
+
+There are three main pieces of related work.
+
+First, neural weather forecasting models give us the general forecasting setup. GraphCast showed that learned neural models can be competitive for medium-range global forecasting \citep{lam2023graphcast}. I are not trying to reproduce the full GraphCast system here, but it is still useful as background because the problem setting is similar: predict future global atmospheric states from recent reanalysis states.
+
+Second, CRPS-trained probabilistic models give us the warm start. FGN is the closest conceptual reference point for direct probabilistic training: it generates probabilistic forecasts through learned model perturbations and trains directly on marginal CRPS \citep{alet2025fgn}. AIFS-CRPS is another strong example of using a CRPS-based objective to train an ensemble weather model efficiently \citep{lang2026aifscrps}. U-Cast is the most direct backbone reference for this project. It uses a standard U-Net architecture, deterministic pretraining, CRPS fine-tuning, and Monte Carlo Dropout to get a fast probabilistic forecaster \citep{cachay2026ucast}. I will use this U-Cast-style model as the first-stage probabilistic model, due to its simplicity and compatibility with Pytorch.
+
+Third, diffusion models give us the sample refiner. Standard diffusion models learn a denoising process that maps noise to samples \citep{ho2020ddpm}. In weather, GenCast uses conditional diffusion for global probabilistic forecasting \citep{price2025gencast}, while cBottle uses a generative diffusion framework for high-resolution climate emulation and related tasks \citep{brenowitz2025cbottle}. Warm-start diffusion shows that conditional generation can be accelerated by replacing the uninformed noise prior with an informed, context-dependent starting point \citep{scholz2025warmstarts}. Our project is basically that idea, but with the warm start coming from a U-Cast-style probabilistic weather model.
+
+\subsection{High-level Methodology}
+
+I will build a two-stage probabilistic forecasting system.
+
+The first stage is a U-Cast-style probabilistic forecaster. The input will be recent ERA5 states on the $5^\circ$ grid, and the output will be a probabilistic prediction for the next forecast step or a short rollout. The model will use a U-Net backbone. I will follow the U-Cast training recipe: first train the U-Net deterministically with a pointwise loss such as MAE, then fine-tune it probabilistically with a CRPS objective. Stochasticity will come from Monte Carlo Dropout or a closely related perturbation mechanism.
+
+The second stage is a warm-start diffusion refiner. Importantly, the diffusion model will use the same basic U-Net architecture as the probabilistic backbone. Given the current weather context $c$ and a first-stage probabilistic forecast $\hat{x}_{t+\Delta}$, I create a noisy warm start
+\[
+z_\tau = \hat{x}_{t+\Delta} + \sigma_\tau \epsilon,
+\qquad \epsilon \sim \mathcal{N}(0, I).
+\]
+A conditional U-Net denoiser then takes $z_\tau$, the weather context $c$, the backbone forecast $\hat{x}_{t+\Delta}$, and the noise level $\tau$ as input.
+
+I will train two diffusion variants with different objectives. The first will use the standard diffusion noise-prediction objective (with latitude weighting for Climate), where the U-Net predicts the injected noise $\epsilon$. The second will use a more forecast-specific correction objective, where the U-Net predicts either the clean target $x_{t+\Delta}$ or the residual $x_{t+\Delta} - \hat{x}_{t+\Delta}$. The point is to test whether warm-start diffusion works better as a generic denoising model or as a residual physical correction model.
+
+At inference time, we sample an initial forecast from the U-Cast-style probabilistic model, add noise at a chosen warm-start level, and run only a small number of denoising steps. The diffusion model is therefore not responsible for the entire forecast distribution. It only has to correct and sharpen an already reasonable forecast.
+
+We can compare four systems:
+\begin{enumerate}
+    \item a deterministic U-Net trained with MAE,
+    \item a U-Cast-style probabilistic U-Net trained with CRPS,
+    \item a cold-start conditional diffusion U-Net,
+    \item the proposed warm-start diffusion U-Net.
+\end{enumerate}
+
+Evaluation will focus on both forecast skill and sample quality. For probabilistic skill, we will report CRPS, ensemble spread-error consistency, and reliability-style diagnostics. For deterministic skill, I will report RMSE. For physical/sample quality, we can inspect spatial spectra and rollout stability.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}

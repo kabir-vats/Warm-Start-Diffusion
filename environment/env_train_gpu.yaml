@@ -1,0 +1,38 @@
+name: warm-start-era5-mini
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pytorch
+  - pytorch-cuda=11.8
+  - dask
+  - distributed
+  - einops
+  - h5py
+  - matplotlib
+  - netcdf4
+  - numpy
+  - pandas
+  - scipy
+  - xarray
+  - zarr
+  - pip
+  - pip:
+    - boto3
+    - botocore
+    - huggingface-hub
+    - hydra-core
+    - lightning-utilities
+    - omegaconf
+    - pytorch-lightning>=2.0
+    - requests
+    - rich
+    - seaborn
+    - tensorstore
+    - tensordict
+    - tqdm
+    - typing-extensions
+    - wandb
+    - xbatcher

@@ -1,0 +1,28 @@
+defaults:
+  - era5_adm.yaml
+
+datamodule:
+  dataset: "/pscratch/sd/k/kvats/data/weatherbench2/1959-2023_01_10-6h-64x32_equiangular_conservative.zarr"
+  input_vars:
+  - "2m_temperature"
+  - "geopotential_250"
+  - "geopotential_300"
+  - "geopotential_500"
+  - "geopotential_700"
+  - "geopotential_1000"
+  - "temperature_850"
+  - "total_column_water_vapour"
+  output_vars:
+  - 2m_temperature
+  - geopotential_250
+  - geopotential_300
+  - geopotential_500
+  - geopotential_700
+  - geopotential_1000
+  - temperature_850
+  - total_column_water_vapour
+
+logger:
+  wandb:
+    project: "ERA5_MINI"
+    tags: ["era5_mini"]

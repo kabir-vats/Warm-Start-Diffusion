@@ -1,0 +1,5 @@
+defaults:
+  - _base_data_config.yaml   # general, dataset-independent, parameters
+  - _self_
+
+horizon: 1                # number of time steps to predict ahead

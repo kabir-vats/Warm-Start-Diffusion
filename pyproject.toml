@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "warm-start-diffusion-era5-mini"
+version = "0.1.0"
+description = "Minimal ERA5-MINI ADM/EDM warm-start diffusion training stack."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "boto3",
+  "botocore",
+  "dask[distributed]",
+  "einops",
+  "h5py",
+  "huggingface-hub",
+  "hydra-core",
+  "lightning-utilities",
+  "matplotlib",
+  "netCDF4",
+  "numpy",
+  "omegaconf",
+  "pandas",
+  "pytorch-lightning>=2.0",
+  "requests",
+  "rich",
+  "scipy",
+  "seaborn",
+  "tensorstore",
+  "tensordict",
+  "torch>=2.0",
+  "tqdm",
+  "typing-extensions",
+  "wandb",
+  "xarray",
+  "xbatcher",
+  "zarr",
+]
+
+[project.optional-dependencies]
+text = ["scikit-learn", "transformers"]
+tisr = ["chex", "jax"]
+plot = ["cartopy", "scienceplots"]
+eval = ["xskillscore"]
+debug = ["pudb"]
+dev = ["ruff"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.ruff]
+line-length = 119
+
+[tool.ruff.lint]
+ignore = ["E501", "F821"]
+select = ["E", "F", "I", "W"]

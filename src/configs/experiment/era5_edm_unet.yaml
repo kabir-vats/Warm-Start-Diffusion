@@ -1,0 +1,17 @@
+# @package _global_
+
+# to execute this experiment run:
+# python run.py experiment=era5_edm_unet
+
+defaults:
+  - era5_adm.yaml
+  - override /diffusion: edm.yaml
+  - _self_
+
+name: "ERA5-${datamodule.hourly_resolution}h-${datamodule.horizon}AR-EDM"
+
+model:
+  with_time_emb: True
+
+diffusion:
+  num_steps: 16

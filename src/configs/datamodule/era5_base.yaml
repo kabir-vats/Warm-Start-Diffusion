@@ -1,0 +1,49 @@
+defaults:
+  - _base_data_config_temporal.yaml   # general, dataset-independent, parameters
+  - _self_
+
+
+data_dir_stats: "/global/cfs/cdirs/m3504/weatherbench2/statistics"
+dataset: "/global/cfs/cdirs/m3504/weatherbench2/1959-2023_01_10-6h-240x121_equiangular_with_poles_conservative.zarr"
+train_slice: ["1979-01-01", "2020-12-31"]
+val_slice: ["2021-01-01", "2021-12-31"]
+test_slice: ["2022-01-01", "2022-12-31"]
+text_data_path: null
+text_type: null    # can be "tf-idf" or "bert"
+# predict_slice: Optional[slice] = slice("2020-12-01", "2020-12-31"),
+hourly_resolution: 6
+subsample_valid: 1   #  1 for no subsampling. 20 gives around 72 samples for validation
+max_val_samples: 128   # Will choose optimal subsampling. To have a round number of batches for validation that can be used with many GPUs
+prediction_horizon: 12   #${datamodule.horizon}   # may set to higher rollouts  # 240 for hourly
+prediction_horizon_long: null   #${datamodule.horizon}   # may set to higher rollouts
+static_fields:
+    - "land_sea_mask"
+#    - "soil_type"
+    - "geopotential_at_surface"
+#    - "lat_lon_embeddings"
+forcing_fields:
+  - "year_progress_sin"
+  - "year_progress_cos"
+  - "day_progress_sin"
+  - "day_progress_cos"
+#  - "toa_incident_solar_radiation"
+loss_latitude_weighting: True    # If true, multiply loss by cos(lat) to account for the shrinking grid cells
+# ====== Additional weighting of variables and levels:
+# It is recommended to enable/disable both loss_pressure_weighting and loss_surface_vars_weighting at the same time
+# E.g. use loss_pressure_weighting=True and loss_surface_vars_weighting="graphcast"
+loss_pressure_weighting: "graphcast"    # If true, multiply loss by p_i/ p_static to upweight the loss at near-surface levels
+loss_pressure_weighting_levels: "era5"
+loss_pressure_weighting_divide_by: "mean"    # "mean" or "sum"
+loss_surface_vars_weighting: "graphcast"            # None or "graphcast"
+loss_multipliers:   # Applies on top of the pressure and surface weighting
+  geopotential: 1
+  mean_sea_level_pressure: 1
+# =======================================================
+normalize_std_fname: 'std'   # 'std_rescaled' or 'std'
+
+use_dask: False    # sometimes OOM error occur when using dask and too many dask workers
+batch_size: 2                 # batch size for training
+eval_batch_size: 1 # batch size for validation/testing (larger might be faster, but uses more RAM)
+# num_workers: 8    # requires many workers or it gets slower during training steps
+num_dask_workers: 4    # See the check-data-loading-speed.ipynb notebook (depends on #input and output vars)
+pin_memory: "force_true"

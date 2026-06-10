@@ -1,0 +1,26 @@
+# @package _global_
+
+# to execute this experiment run:
+# python run.py experiment=era5_adm
+
+defaults:
+  - era5_base.yaml
+  - _self_
+
+name: "ERA5-${datamodule.hourly_resolution}h-${datamodule.horizon}AR"
+
+module:
+  conv_padding_mode_global: "circular_height_only"   #  circular is appropriate for global data since it treats the borders as connected
+
+model:
+  model_channels: 256
+  dropout: 0.0
+  attn_levels: [2, 3]
+  outer_sample_mode: "bilinear"
+  upsample_dims: [240, 128]
+
+trainer:
+  deterministic: False    # necessary when using upsample_dims
+  benchmark: False
+#  devices: 2
+

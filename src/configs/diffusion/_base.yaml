@@ -1,0 +1,13 @@
+# @package _global_
+
+defaults:
+  - _self_
+
+diffusion:
+  timesteps: 1000
+  sampling_timesteps: null   # null means use all timesteps
+  loss_function: "l1"
+
+model:
+  with_time_emb: True
+  loss_function: ${diffusion.loss_function}

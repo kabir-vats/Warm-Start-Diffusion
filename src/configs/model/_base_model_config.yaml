@@ -1,0 +1,8 @@
+name: ""
+verbose: ${verbose}
+loss_function: "mse"   # loss function to use for training
+num_training_ensemble_members: 1
+num_conditional_channels: 0  # To be used for, e.g., diffusion models
+predict_non_spatial_condition: False
+loss_function_weights: null    # Weights for the loss function, e.g. {"condition_non_spatial": 0.01}. Non-specified keys will be set to 1.0
+#################################################################################################
